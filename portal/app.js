@@ -20,6 +20,6 @@ function render(){
   document.querySelector('#dimensions').onclick=()=>{dimensions.reverse();version++;expanded.clear();render();};
   document.querySelector('#app').dataset.ready='true';persist();
 }
-let saving=Promise.resolve();
-function persist(){const payload=JSON.stringify(({version,dimensions}));document.querySelector('#app').dataset.saved='false';saving=saving.then(()=>fetch('/state',{method:'POST',headers:{'content-type':'application/json'},body:payload})).then(response=>{if(!response.ok)throw Error('门户保存失败');document.querySelector('#app').dataset.saved='true';}).catch(error=>{document.querySelector('#status').textContent=error.message;});}
+let saving=Promise.resolve();let saveGeneration=0;
+function persist(){const generation=++saveGeneration;const payload=JSON.stringify(({version,dimensions}));document.querySelector('#app').dataset.saved='false';saving=saving.then(()=>fetch('/state',{method:'POST',headers:{'content-type':'application/json'},body:payload})).then(response=>{if(!response.ok)throw Error('门户保存失败');if(generation===saveGeneration)document.querySelector('#app').dataset.saved='true';}).catch(error=>{document.querySelector('#status').textContent=error.message;});}
 async function boot(){const saved=await(await fetch('/state')).json();if(saved){version=saved.version;dimensions=saved.dimensions;}render();}boot();
