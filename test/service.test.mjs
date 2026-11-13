@@ -32,3 +32,26 @@ test('服务健康检查和单次查看走真实来源', async () => {
     assert.equal((await fetch(service.url + '/missing')).status, 404);
   } finally { await service.close(); await fixture.close(); await rm(directory, { recursive: true, force: true }); }
 });
+
+test('叶项采集接口只返回叶粒度并可留存回执', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'service-collect-'));
+  const fixture = await startFixture();
+  const service = await startService({ source: fixture.url, directory });
+  try {
+    const response = await fetch(service.url + '/collect');
+    const body = await response.text();
+    assert.equal(response.status, 200, body);
+    const report = JSON.parse(body);
+    assert.equal(report.leaves.length, 4);
+    assert.ok(report.leaves.every(leaf => leaf.canonicalPath.length === 3));
+    assert.equal(report.coverage.remainingItems, 2);
+    const saved = await (await fetch(service.url + '/collect/receive?key=finance')).json();
+    assert.equal(saved.key, 'finance');
+    const receipt = await (await fetch(service.url + '/receipts/finance')).json();
+    assert.equal(receipt.value.completeness.counts.suppressedLeaves, 1);
+    // 粗粒度请求得到明确拒绝
+    const rejected = await fetch(service.url + '/collect?grain=museum');
+    assert.equal(rejected.status, 400);
+    assert.match(await rejected.text(), /目标粒度/);
+  } finally { await service.close(); await fixture.close(); await rm(directory, { recursive: true, force: true }); }
+});

@@ -15,7 +15,7 @@ function render(){
   }
   html+='<p data-coverage="top-n" data-remaining="2">仅显示前N项，另有2项不予展开</p></section>';
   document.querySelector('#app').innerHTML=html;
-  document.querySelectorAll('[data-expand]').forEach(button=>button.onclick=async()=>{const key=button.dataset.expand;if(expanded.has(key))expanded.delete(key);else{button.disabled=true;button.textContent='加载中';await new Promise(resolve=>setTimeout(resolve,50));expanded.add(key);}render();});
+  document.querySelectorAll('[data-expand]').forEach(button=>button.onclick=async()=>{const key=button.dataset.expand;if(expanded.has(key))expanded.delete(key);else{button.disabled=true;button.textContent='加载中';await new Promise(resolve=>setTimeout(resolve,120));expanded.add(key);}render();});
   document.querySelector('#refresh').onclick=()=>{version++;expanded.clear();render();};
   document.querySelector('#dimensions').onclick=()=>{dimensions.reverse();version++;expanded.clear();render();};
   document.querySelector('#app').dataset.ready='true';persist();

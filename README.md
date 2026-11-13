@@ -17,8 +17,10 @@ npm start
 
 ## 接口与模块
 
-`GET /health` 查看状态，`GET /inspect` 查看来源，`GET /receive?key=sample` 保存单次接收，`GET /receipts/sample` 读取回执。相同key和相同内容可重复接收，不同内容拒绝覆盖。
+`GET /health` 查看状态，`GET /inspect` 查看来源原始可见行，`GET /receive?key=sample` 保存单次接收，`GET /receipts/sample` 读取回执。相同key和相同内容可重复接收，不同内容拒绝覆盖。
 
-`src/connector.mjs` 解释单次来源响应，`fixtures/source.mjs` 提供可重复启动的本地来源，`src/service.mjs` 组织访问入口，`src/store.mjs` 保存查看结果。`test/connector.test.mjs` 验证协议原语和演练源，`test/service.test.mjs` 验证服务与留存边界。
+`GET /collect?grain=museum,zone,date` 执行按粒度的叶项采集：只返回叶项，附维度路径、屏幕来源、版次/筛选/维度快照、Top-N 覆盖边界、抑制/缺测/真实零值分类与小计核对差额；`GET /collect/receive?key=finance` 同时留存回执。目标粒度不是页面叶粒度时返回明确错误。采集中若页面版次或维度变化，本轮作废并保留失败证据后自动重启一致的一轮。
+
+`src/connector.mjs` 解释单次来源响应，`src/collector.mjs` 实现叶项采集流程（版次守卫、行身份归一、状态分类、覆盖边界），`fixtures/source.mjs` 提供可重复启动的本地来源，`src/service.mjs` 组织访问入口，`src/store.mjs` 保存查看结果。`test/connector.test.mjs` 验证协议原语和演练源，`test/collector.test.mjs` 验证采集流程的中断重启、维度重排与覆盖边界，`test/service.test.mjs` 验证服务与留存边界。
 
 生产接入地址与凭据需由部署配置给出；演练客户端拒绝访问回环以外的地址。文档中的接口不向外提供任意目标代理。异常以明确错误响应返回，接收失败不覆盖原回执。
